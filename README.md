@@ -56,15 +56,11 @@ await couch.mydb.mydoc()
 // {"_id":"mydoc","_rev":"1-0e3a30d6821dd5c8b7c1f4993b403548","a":"one","b":2,"c":true}
 ```
 
-> Note: the above method will not work for numeric document ids or indeed document ids that start with numbers! e.g. `2mydoc`. Instead we would have to pass in document id as a `path` parameter:
+> Note: the above method will not work for numeric document ids or indeed document ids that start with numbers! e.g. `2mydoc`.
 
 ```js
-// get a single document using the path, second attempt
-await couch.mydb({ path: '100077' })
-// {"_id":"100077","_rev":"3-53be74742d0cabef944db504fa040aa9","name":"Abū Ghurayb","latitude":33.30563,"longitude":44.18477,"country":"IQ","population":900000,"timezone":"Asia/Baghdad"}
-
-// or we can use quoted properties
-await couch.mydb['1000543']()
+// We can use quoted properties
+await couch.cities['1000543']()
 // {"_id":"1000543","_rev":"1-3256046064953e2f0fdb376211fe78ab","name":"Graaff-Reinet","latitude":-32.25215,"longitude":24.53075,"country":"ZA","population":62896,"timezone":"Africa/Johannesburg"}
 // or variables
 const docId = '1000543'
@@ -99,4 +95,3 @@ await couch.mydb._changes({ qs: { since: '0' }})
 - `method` - HTTP method (defaults to 'get').
 - `qs` - an object representing the key/values to be encoded into the request query string.
 - `body` - an object representing the data to be JSON.stringified into a POST/PUT request body.
-- `path` - additional path to be appended to the URL programmatically - useful for document ids

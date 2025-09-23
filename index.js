@@ -16,10 +16,6 @@ export default function () {
           method: 'get'
         }
         Object.assign(opts, argumentsList[0] || {})
-        if (opts.path) {
-          builderPath += '/' + opts.path
-          delete opts.path
-        }
         let url = new URL(builderPath, plainURL).toString()
         if (typeof opts.qs === 'object') {
           ['startkey', 'endkey', 'key', 'keys', 'start_key', 'end_key'].forEach(function (key) {
