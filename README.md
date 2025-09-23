@@ -61,6 +61,10 @@ await couch.mydb.mydoc()
 await couch.mydb({ path: '100077' })
 // {"_id":"100077","_rev":"3-53be74742d0cabef944db504fa040aa9","name":"Abū Ghurayb","latitude":33.30563,"longitude":44.18477,"country":"IQ","population":900000,"timezone":"Asia/Baghdad"}
 
+// or we can use quoted properties
+await couch.mydb['1000543']()
+// {"_id":"1000543","_rev":"1-3256046064953e2f0fdb376211fe78ab","name":"Graaff-Reinet","latitude":-32.25215,"longitude":24.53075,"country":"ZA","population":62896,"timezone":"Africa/Johannesburg"}
+
 // do a Mango query
 await couch.cities._find({ method: 'post', body: { selector: { country: 'US', limit: 3 }}})
 // {"docs":[{"_id":"10104153","_rev":"1-32aab6258c65c5fc5af044a153f4b994","name":"Silver Lake","latitude":34.08668,"longitude":-118.27023,"country":"US","population":32890,"timezone":"America/Los_Angeles"}...
