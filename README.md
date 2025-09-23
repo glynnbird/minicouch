@@ -21,7 +21,7 @@ The library expects a single environment variable
 ```js
 import minicouch from './index.js'
 
-const api = minicouch()
+const couch = minicouch()
 
 // get the CouchDB meta data
 await couch()
