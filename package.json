@@ -1,0 +1,23 @@
+{
+  "name": "minicouch",
+  "version": "0.0.1",
+  "description": "Tiny Apache CouchDB JavaScript client",
+  "keywords": [
+    "CouchDB"
+  ],
+  "homepage": "https://github.com/glynnbird/minicouch#readme",
+  "bugs": {
+    "url": "https://github.com/glynnbird/minicouch/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/glynnbird/minicouch.git"
+  },
+  "license": "Apache-2.0",
+  "author": "Glynn Bird <glynn.bird@gmail.com>",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
