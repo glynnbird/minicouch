@@ -7,7 +7,7 @@ A tiny CouchDB JavaScript p.o.c client, inspired by a [post by Caolan](https://c
 Caveats:
 
 - the whole CouchDB API, or at least the JSON bits.
-- numeric ids, design doc names or view names (or those starting with number) will not work.
+- numeric design doc names or view names (or those starting with number) will not work.
 - basic auth only. 
 
 ## Configuration
