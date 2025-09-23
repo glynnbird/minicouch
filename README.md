@@ -2,7 +2,7 @@
 
 A tiny CouchDB JavaScript p.o.c client, inspired by a [post by Caolan](https://caolan.uk/notes/2025-09-18_api_builder_style.cm).
 
-> less than 50 lines of code! less than 1kB minified!
+> fewer than 50 lines of code! less than 1kB minified!
 
 Caveats:
 
