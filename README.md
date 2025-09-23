@@ -54,9 +54,11 @@ await couch.mydb._all_docs({ qs: { key: 'mydoc', include_docs: true }})
 // get a single document using the path
 await couch.mydb.mydoc()
 // {"_id":"mydoc","_rev":"1-0e3a30d6821dd5c8b7c1f4993b403548","a":"one","b":2,"c":true}
+```
 
 > Note: the above method will not work for numeric document ids or indeed document ids that start with numbers! e.g. `2mydoc`. Instead we would have to pass in document id as a `path` parameter:
 
+```js
 // get a single document using the path, second attempt
 await couch.mydb({ path: '100077' })
 // {"_id":"100077","_rev":"3-53be74742d0cabef944db504fa040aa9","name":"Abū Ghurayb","latitude":33.30563,"longitude":44.18477,"country":"IQ","population":900000,"timezone":"Asia/Baghdad"}
@@ -75,8 +77,21 @@ await couch.cities._find({ method: 'post', body: { selector: { country: 'US', li
 // do aggregation with MapReduce
 await couch.cities._design.count._view.byCountry({ qs: { group: true }})
 // {"rows":[{"key":null,"value":1},{"key":"AD","value":2},{"key":"AE","value":13},{"key":"AF","value":48}
+```
 
 > Note: the above method will not work for numeric design document ids or view names! e.g. `2mydesigndoc`.
+
+```js
+// bulk insert
+await couch.mydb._bulk_docs({ method: 'post', body: { docs: [
+    { _id: 'a1', name: 'fred' },
+    { _id: 'a2', name: 'velma'}
+  ]}})
+// [{"ok":true,"id":"a1","rev":"1-6e70d28d576c6b66c115d9524e86505a"},{"ok":true,"id":"a2","rev":"1-219307f319dacef3e6096c3dc27f1ffb"}]
+
+// changes 
+await couch.mydb._changes({ qs: { since: '0' }})
+// {"results":[{"seq":"1-g1AAAAR_2","id":"a1","changes":[{"rev":"1-33ab92fdcf1ccbbdee4e03a63ca12dbb"}]},..
 ```
 
 ## Function call parameters
