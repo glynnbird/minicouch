@@ -64,6 +64,9 @@ await couch.mydb({ path: '100077' })
 // or we can use quoted properties
 await couch.mydb['1000543']()
 // {"_id":"1000543","_rev":"1-3256046064953e2f0fdb376211fe78ab","name":"Graaff-Reinet","latitude":-32.25215,"longitude":24.53075,"country":"ZA","population":62896,"timezone":"Africa/Johannesburg"}
+// or variables
+const docId = '1000543'
+await couch.cities[docId]()
 
 // do a Mango query
 await couch.cities._find({ method: 'post', body: { selector: { country: 'US', limit: 3 }}})
