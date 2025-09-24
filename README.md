@@ -4,11 +4,9 @@ A tiny CouchDB JavaScript p.o.c client, inspired by a [post by Caolan](https://c
 
 > fewer than 50 lines of code! less than 1kB minified!
 
-Caveats:
-
-- the whole CouchDB API, or at least the JSON bits.
-- numeric design doc names or view names (or those starting with number) will not work.
-- basic auth only. 
+- Implements the whole CouchDB API, or at least the JSON bits.
+- Numeric design doc names or view names need to use quoted properties.
+- Basic-auth only. 
 
 ## Configuration
 
@@ -19,7 +17,7 @@ The library expects a single environment variable
 ## Usage
 
 ```js
-import minicouch from './index.js'
+import minicouch from 'minicouch'
 
 const couch = minicouch()
 
@@ -54,17 +52,18 @@ await couch.mydb._all_docs({ qs: { key: 'mydoc', include_docs: true }})
 // get a single document using the path
 await couch.mydb.mydoc()
 // {"_id":"mydoc","_rev":"1-0e3a30d6821dd5c8b7c1f4993b403548","a":"one","b":2,"c":true}
-```
 
-> Note: the above method will not work for numeric document ids or indeed document ids that start with numbers! e.g. `2mydoc`.
-
-```js
 // We can use quoted properties
 await couch.cities['1000543']()
 // {"_id":"1000543","_rev":"1-3256046064953e2f0fdb376211fe78ab","name":"Graaff-Reinet","latitude":-32.25215,"longitude":24.53075,"country":"ZA","population":62896,"timezone":"Africa/Johannesburg"}
+
 // or variables
 const docId = '1000543'
 await couch.cities[docId]()
+
+// or we can head the document to get the headers back
+await couch.cities[docId]({ method: 'head' })
+// {"cache-control":"must-revalidate","connection":"close","content-length":"194",..
 
 // do a Mango query
 await couch.cities._find({ method: 'post', body: { selector: { country: 'US', limit: 3 }}})
@@ -73,11 +72,10 @@ await couch.cities._find({ method: 'post', body: { selector: { country: 'US', li
 // do aggregation with MapReduce
 await couch.cities._design.count._view.byCountry({ qs: { group: true }})
 // {"rows":[{"key":null,"value":1},{"key":"AD","value":2},{"key":"AE","value":13},{"key":"AF","value":48}
-```
 
-> Note: the above method will not work for numeric design document ids or view names! e.g. `2mydesigndoc`.
+// if the view name starts with a number we have to use quoted properties again
+await couch.cities._design['2good']._view['2bad']({ qs: { starkey: 'abc123', include_docs: true }})
 
-```js
 // bulk insert
 await couch.mydb._bulk_docs({ method: 'post', body: { docs: [
     { _id: 'a1', name: 'fred' },
@@ -88,10 +86,14 @@ await couch.mydb._bulk_docs({ method: 'post', body: { docs: [
 // changes 
 await couch.mydb._changes({ qs: { since: '0' }})
 // {"results":[{"seq":"1-g1AAAAR_2","id":"a1","changes":[{"rev":"1-33ab92fdcf1ccbbdee4e03a63ca12dbb"}]},..
+
+// partitioned databases work too
+await couch.ordersp._partition['1000']._all_docs({ qs: { limit: 1 }})
+// {"total_rows":10608,"offset":0,"rows":[{"id":"1000:0041XVQ6LY62POIN","key":"1000:0041XVQ6LY62POIN","value":{"rev":"1-6770cf45031b4bb24fe500e81d0dd49c"}}]}
 ```
 
 ## Function call parameters
 
 - `method` - HTTP method (defaults to 'get').
-- `qs` - an object representing the key/values to be encoded into the request query string.
-- `body` - an object representing the data to be JSON.stringified into a POST/PUT request body.
+- `qs` - An object representing the key/values to be encoded into the request query string.
+- `body` - An object representing the data to be JSON.stringified into a POST/PUT request body.
