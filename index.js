@@ -1,3 +1,4 @@
+const MIME_JSON = 'application/json'
 export default function () {
   function minicouch(path = '/') {
     return new Proxy(() => path, {
@@ -9,9 +10,9 @@ export default function () {
         let builderPath = target().replace(/\/$/, '')
         const opts = {
           headers: {
-            'content-type': 'application/json',
+            'content-type': MIME_JSON,
             'user-agent': 'minicouch',
-            'Authorization': auth || undefined
+            'authorization': auth || undefined
           },
           method: 'get'
         }
@@ -30,7 +31,13 @@ export default function () {
           opts.body = JSON.stringify(opts.body)
         }
         const response = await fetch(url, opts)
-        return response.json()
+        if (response.ok && opts.method === 'head') return Object.fromEntries(response.headers)
+        response.output = opts.method !== 'head' &&response.headers.get('content-type') === MIME_JSON ? await response.json() : await response.text()
+        if (response.ok) {
+          return response.output
+        } else {
+          throw new Error(response.output.reason || response.output.error || 'couch returned ' + response.status)
+        }
       }
     })
   }
@@ -39,7 +46,6 @@ export default function () {
   const parsedURL = new URL(process.env.COUCH_URL)
   const plainURL = `${parsedURL.origin}${parsedURL.pathname}`
   let auth = parsedURL.username && parsedURL.password ? 'Basic ' + Buffer.from(`${parsedURL.username}:${parsedURL.password}`).toString('base64') : ''
-
   return minicouch('/')
 }
 

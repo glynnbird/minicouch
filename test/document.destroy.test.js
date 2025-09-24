@@ -1,0 +1,52 @@
+// Licensed under the Apache License, Version 2.0 (the 'License'); you may not
+// use this file except in compliance with the License. You may obtain a copy of
+// the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS, WITHOUT
+// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+// License for the specific language governing permissions and limitations under
+// the License.
+
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { mockAgent, mockPool, JSON_HEADERS } from './mock.js'
+import minicouch from '../index.js'
+const couch = minicouch()
+
+test('should be able to destroy a document - DELETE /db/id - db.destroy', async () => {
+  // mocks
+  const response = { ok: true, id: 'id', rev: '2-456' }
+  mockPool
+    .intercept({
+      method: 'delete',
+      path: '/db/id?rev=1-123'
+    })
+    .reply(200, response, JSON_HEADERS)
+
+  // test DELETE /db/id
+  const p = await couch.db.id({ method: 'delete', qs: { rev: '1-123' }})
+  assert.deepEqual(p, response)
+  mockAgent.assertNoPendingInterceptors()
+})
+
+test('should be able to handle 409 conflicts - DELETE /db/id - db.destroy', async () => {
+  // mocks
+  const response = {
+    error: 'conflict',
+    reason: 'Document update conflict.'
+  }
+  mockPool
+    .intercept({
+      method: 'delete',
+      path: '/db/id?rev=1-123'
+    })
+    .reply(409, response, JSON_HEADERS)
+
+  // test DELETE /db/id
+  await assert.rejects(couch.db.id({ method: 'delete', qs: { rev: '1-123' }}), { message: 'Document update conflict.' })
+  mockAgent.assertNoPendingInterceptors()
+})
+
