@@ -1,12 +1,18 @@
 # minicouch
 
-A tiny CouchDB JavaScript p.o.c client, inspired by a [post by Caolan](https://caolan.uk/notes/2025-09-18_api_builder_style.cm).
+A tiny CouchDB JavaScript client, inspired by a [post by Caolan](https://caolan.uk/notes/2025-09-18_api_builder_style.cm).
 
-> fewer than 50 lines of code! less than 1kB minified!
+> Fewer than 50 lines of code! Less than 1kB minified!
 
 - Implements the whole CouchDB API, or at least the JSON bits.
 - Numeric design doc names or view names need to use quoted properties.
 - Basic-auth only. 
+
+## Installation
+
+```sh
+npm install --save minicouch
+```
 
 ## Configuration
 
@@ -90,10 +96,24 @@ await couch.mydb._changes({ qs: { since: '0' }})
 // partitioned databases work too
 await couch.ordersp._partition['1000']._all_docs({ qs: { limit: 1 }})
 // {"total_rows":10608,"offset":0,"rows":[{"id":"1000:0041XVQ6LY62POIN","key":"1000:0041XVQ6LY62POIN","value":{"rev":"1-6770cf45031b4bb24fe500e81d0dd49c"}}]}
+
+// the award for longest function call goes to...
+await couch.ordersp._partition['1000']._design.mydesigndoc._view.myview({ qs: { group_level: 2 } })
+
+// attachments are also supported
+await couch.profiles.bob['pic.gif']({
+  method: 'put', 
+  qs: { rev: '1-150' },
+  headers: { 'content-type': 'image/gif' },
+  body: Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64')
+})
+await couch.profiles.bob['pic.gif']
+await couch.profiles.bob['pic.gif']({ method: 'delete', qs: { rev: '2-456' }})
 ```
 
 ## Function call parameters
 
-- `method` - HTTP method (defaults to 'get').
-- `qs` - An object representing the key/values to be encoded into the request query string.
-- `body` - An object representing the data to be JSON.stringified into a POST/PUT request body.
+- `method` - (optional) HTTP method (defaults to 'get').
+- `qs` - (optional)  An object representing the key/values to be encoded into the request query string.
+- `body` - (optional) An object representing the data to be JSON.stringified into a POST/PUT request body. If a string or a Buffer is supplied, it will go unmolested to the request body.
+- `headers` - An object whose key values override the default `content-type: application/json` HTTP request headers.
