@@ -117,3 +117,39 @@ await couch.profiles.bob['pic.gif']({ method: 'delete', qs: { rev: '2-456' }})
 - `qs` - (optional)  An object representing the key/values to be encoded into the request query string.
 - `body` - (optional) An object representing the data to be JSON.stringified into a POST/PUT request body. If a string or a Buffer is supplied, it will go unmolested to the request body.
 - `headers` - An object whose key values override the default `content-type: application/json` HTTP request headers.
+
+## Compared to other clients
+
+[minicouch](https://www.npmjs.com/package/minicouch) has some advantages as a module:
+
+- Zero dependencies.
+- Tiny code size.
+- Future-proof - any API path can be built.
+- The function invocations exactly mirror the CouchDB API, so no learning two names for things.
+
+but has some disadvantages:
+
+- Strictly-typed languages like TypeScript won't like minicouch's lack of structure.
+- Some function calls become quite verbose, I'm looking at you MapReduce.
+- No high-level abstractions, like changes followers, pagination etc.
+
+Other libraries include:
+
+- [nano](https://www.npmjs.com/package/nano) - Official Apache CouchDB Node.js library. Adds Typescript definitions, cookies, streamed output options, changes follower, multi-part functions and custom agent support.
+- [@ibm-cloud/cloudant](https://github.com/IBM/cloudant-node-sdk) Official IBM Cloudant SDK. Basic/Session/IAM auth, changes follower, pagination API, TypeScript support, retry logic, streamed output options and custom agent support.
+
+## How does it work?
+
+[minicouch](https://www.npmjs.com/package/minicouch) makes use of the JavaScript [Proxy object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) which allows the library to infer from the form of the function call, what the API path needs to be 
+
+e.g.
+
+```
+couch.mydb._design.myddoc._view.myview  --> $COUCH_URL/mydb/_design/myddoc/_view/myview
+```
+
+This way minicouch doesn't need to model the CouchDB API structure at all, so if a new API call is added later, minicouch already supports it.
+
+When `()` is added, minicouch's [apply](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/Proxy/apply) trap is called and an API form is attempted. The parameters to the function call define the HTTP method, query string parameters, custom headers and an optional request body.
+
+minicouch adds a sprinkle of assistance, ensuring that the `body` is formatted correctly and that the response is parsed according to its mime type, but otherwise gets out of the way.

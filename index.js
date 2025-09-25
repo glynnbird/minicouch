@@ -1,3 +1,4 @@
+import pkg from './package.json' with { type: 'json' }
 const MIME_JSON = 'application/json'
 export default function () {
   function minicouch(path = '/') {
@@ -8,7 +9,7 @@ export default function () {
       async apply(target, thisArg, argumentsList) {
         let builderPath = target().replace(/\/$/, '')
         const opts = {
-          headers: { 'content-type': MIME_JSON, 'user-agent': 'minicouch', authorization: auth || undefined },
+          headers: { 'content-type': MIME_JSON, 'user-agent': `${pkg.name}/${pkg.version}`, authorization: auth || undefined },
           method: 'get'
         }
         Object.assign(opts, argumentsList[0] || {})
@@ -30,16 +31,15 @@ export default function () {
           response.output = Object.fromEntries(response.headers)
         } else if (contentType === MIME_JSON) {
           response.output = await response.json()
-        } else if (contentType.startsWith('text/') ) {
+        } else if (contentType.startsWith('text/')) {
           response.output = await response.text()
         } else {
           response.output = Buffer.from(await response.arrayBuffer())
         }
-        if (response.ok) {
+        if (response.ok)
           return response.output
-        } else {
+        else
           throw new Error(response.output?.reason || response.output?.error || 'couch returned ' + response.status)
-        }
       }
     })
   }
