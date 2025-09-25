@@ -1,6 +1,6 @@
 {
   "name": "minicouch",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Tiny Apache CouchDB JavaScript client",
   "keywords": [
     "CouchDB"
