@@ -1,42 +1,95 @@
 import pkg from './package.json' with { type: 'json' }
+
+// constants
 const MIME_JSON = 'application/json'
+const CONTENT_TYPE = 'content-type'
+
+// a list of query string parameters that need JSON.stringifying
+const PARAMS_TO_ENCODE = ['startkey', 'endkey', 'key', 'keys', 'start_key', 'end_key']
+
 export default function () {
+  // parse the URL from the environment to create a new baseURL without credentials
+  const { origin, pathname, username, password } = new URL(process.env.COUCH_URL)
+  const baseURL = `${origin}${pathname}`
+
+  // turn the credentials into an base64-encoded string ready for HTTP headers
+  const auth = username && password ? 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64') : ''
+
+  // make default HTTP opts. 'get' is the default method. Asume JSON mime type and our own user-agent + auth
+  const defaultOpts = {
+    headers: {
+      'content-type': MIME_JSON,
+      'user-agent': `${pkg.name}/${pkg.version}`,
+      authorization: auth || undefined
+    }
+  }
+
+  // returns a Proxy object https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/Proxy
+  // which allows access to its properties and methods to be "trapped" with get and apply, respectively
   function minicouch(path = '/') {
     return new Proxy(() => path, {
+      // trap for accessing properties
       get(_, prop) {
+        // some recursion to allow couch.db._design.myddoc._view.myview
         return minicouch(path + encodeURIComponent(prop) + '/')
       },
+      // trap for the function call ()
       async apply(target, _, args) {
-        const opts = { ...defaultOpts, ...(args[0] || {}) }
-        let url = new URL(target().replace(/\/$/, ''), plainURL).toString()
+        // create new set of opts based on our defaults and those passed in
+        const opts = {
+          ...defaultOpts,
+          ...(args[0] || {})
+        }
+
+        // form a new URL from path from our proxy, appended to the baseURL
+        const url = new URL(target().replace(/\/$/, ''), baseURL)
+
+        // if there's a query string object
         if (typeof opts.qs === 'object') {
-          ['startkey', 'endkey', 'key', 'keys', 'start_key', 'end_key'].forEach(function (key) {
-            if (key in opts.qs) opts.qs[key] = JSON.stringify(opts.qs[key])
-          })
-          url += '?' + new URLSearchParams(opts.qs).toString()
-          delete opts.qs
+          // add each k/v to the URL's seachParams
+          for (const [key, value] of Object.entries(opts.qs)) {
+            // taking care to JSON.stringify certain items
+            if (PARAMS_TO_ENCODE.includes(key)) {
+              opts.qs[key] = JSON.stringify(value)
+            }
+            url.searchParams.set(key, opts.qs[key])
+          }
         }
-        opts.body = typeof opts.body === 'object' && opts.headers['content-type'] === MIME_JSON ? JSON.stringify(opts.body) : opts.body
-        const response = await fetch(url, opts)
-        const contentType = response.headers.get('content-type')
+
+        // if we've been given a JavaScript object, it needs stringifying
+        opts.body = typeof opts.body === 'object' && opts.headers[CONTENT_TYPE].startsWith(MIME_JSON) ?
+          JSON.stringify(opts.body) : opts.body
+
+        // make the HTTP request
+        const response = await fetch(url.toString(), opts)
+
+        // extract the mime type from the response
+        const contentType = response.headers.get(CONTENT_TYPE) || ''
+        let output = ''
         if (opts.method === 'head') {
-          response.output = Object.fromEntries(response.headers)
+          // for HEAD method, we actually output the headers
+          output = Object.fromEntries(response.headers)
         } else if (contentType === MIME_JSON) {
-          response.output = await response.json()
+          // json is json
+          output = await response.json()
         } else if (contentType.startsWith('text/')) {
-          response.output = await response.text()
+          // any text mime type is text
+          output = await response.text()
         } else {
-          response.output = Buffer.from(await response.arrayBuffer())
+          // everything else is a Buffer
+          output = Buffer.from(await response.arrayBuffer())
         }
-        if (response.ok) return response.output
-        throw new Error(response.output?.reason || response.output?.error || `couch returned ${response.status}`)
+
+        // either return the output
+        if (response.ok) return output
+
+        // or throw an Error
+        throw new Error(output?.reason || output?.error || `couch returned ${response.status}`)
       }
     })
   }
-  const { origin, pathname, username, password } = new URL(process.env.COUCH_URL)
-  const plainURL = `${origin}${pathname}`
-  let auth = username && password ? 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64') : ''
-  const defaultOpts = { headers: { 'content-type': MIME_JSON, 'user-agent': `${pkg.name}/${pkg.version}`, authorization: auth || undefined } }
+
+  // the top of the API tree is /
   return minicouch('/')
 }
 

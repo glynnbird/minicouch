@@ -1,11 +1,9 @@
 # minicouch
 
-A tiny CouchDB JavaScript client, inspired by a [post by Caolan](https://caolan.uk/notes/2025-09-18_api_builder_style.cm).
+A tiny (~1kB minified) CouchDB JavaScript client, inspired by a [post by Caolan](https://caolan.uk/notes/2025-09-18_api_builder_style.cm).
 
-> Fewer than 50 lines of code! Less than 1kB minified!
-
-- Implements the whole CouchDB API, or at least the JSON bits.
-- Numeric design doc names or view names need to use quoted properties.
+- Implements the whole CouchDB API.
+- Zero dependencies.
 - Basic-auth only. 
 
 ## Installation
