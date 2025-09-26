@@ -116,6 +116,7 @@ await couch.profiles.bob['pic.gif']({ method: 'delete', qs: { rev: '2-456' }})
 - `qs` - (optional)  An object representing the key/values to be encoded into the request query string.
 - `body` - (optional) An object representing the data to be JSON.stringified into a POST/PUT request body. If a string or a Buffer is supplied, it will go unmolested to the request body.
 - `headers` - An object whose key values override the default `content-type: application/json` HTTP request headers.
+- `stream` - (optional) A boolean indicating whether the result should be a stream (default `false`).
 
 ## Compared to other clients
 

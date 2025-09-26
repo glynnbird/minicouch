@@ -1,3 +1,4 @@
+import { Readable } from 'node:stream'
 import pkg from './package.json' with { type: 'json' }
 
 // a list of query string parameters that need JSON.stringifying before use
@@ -58,6 +59,9 @@ export default function () {
         if (opts.method === 'head') {
           // for HEAD method, we actually output the headers
           output = Object.fromEntries(response.headers)
+        } else if (opts.stream) {
+          // for streamed output
+          return Readable.fromWeb(response.body)
         } else if (contentType === MIME_JSON) {
           // json is json
           output = await response.json()
