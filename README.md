@@ -108,6 +108,9 @@ await couch.profiles.bob['pic.gif']({
 })
 await couch.profiles.bob['pic.gif']
 await couch.profiles.bob['pic.gif']({ method: 'delete', qs: { rev: '2-456' }})
+
+// the output can also be streamed by adding stream:true
+(await couch.mydb._design.report._view.monthly({ qs: { group_level: 2}, stream: true })).pipe(process.stdout)
 ```
 
 ## Function call parameters
