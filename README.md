@@ -136,13 +136,25 @@ await couch._session({ method: 'post', body: { name: 'myusername', password: 'my
 await couch._all_dbs()
 ``` 
 
-## Function call parameters
+Multipart attachment uploads work too:
+
+```js
+const image = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64')
+const images = [
+  { name: 'transparent.gif', data: image, content_type: 'image/gif' },
+  { name: 'transparent2.gif', data: image, content_type: 'image/gif' }
+]
+await couch.db.docid({ method: 'put', multipart: images })
+```
+
+## Function call attributes
 
 - `method` - (optional) HTTP method (defaults to 'get').
 - `qs` - (optional)  An object representing the key/values to be encoded into the request query string.
 - `body` - (optional) An object representing the data to be JSON.stringified into a POST/PUT request body. If a string or a Buffer is supplied, it will go unmolested to the request body.
 - `headers` - An object whose key values override the default `content-type: application/json` HTTP request headers.
 - `stream` - (optional) A boolean indicating whether the result should be a stream (default `false`).
+- `multipart` - (optional) An array of attachments to be combined into a multi-part upload.
 
 ## Compared to other clients
 
@@ -156,7 +168,7 @@ But it has some disadvantages:
 
 Other libraries include:
 
-- [nano](https://www.npmjs.com/package/nano) - Official Apache CouchDB Node.js library. Adds Typescript definitions, changes follower, multi-part functions and custom agent support.
+- [nano](https://www.npmjs.com/package/nano) - Official Apache CouchDB Node.js library. Adds Typescript definitions, changes follower and custom agent support.
 - [@ibm-cloud/cloudant](https://github.com/IBM/cloudant-node-sdk) Official IBM Cloudant SDK. Adds IAM auth, changes follower, pagination API, TypeScript support, retry logic and custom agent support.
 
 ## How does it work?
