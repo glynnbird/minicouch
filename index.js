@@ -1,5 +1,18 @@
+// Licensed under the Apache License, Version 2.0 (the 'License'); you may not
+// use this file except in compliance with the License. You may obtain a copy of
+// the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS, WITHOUT
+// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+// License for the specific language governing permissions and limitations under
+// the License.
+
 import { Readable } from 'node:stream'
 import CookieJar from './cookie.js'
+import MultiPartFactory from './multipart.js'
 import pkg from './package.json' with { type: 'json' }
 
 // a list of query string parameters that need JSON.stringifying before use
@@ -58,6 +71,14 @@ export default function () {
         const cookie = cookieJar.getCookieString(urlStr)
         if (cookie) {
           opts.headers.cookie = cookie
+        }
+
+        if (opts.multipart) {
+          // generate the multipart/related body, header and boundary to 
+          // upload multiple binary attachments in one request
+          const mp = new MultiPartFactory(opts.multipart)
+          opts.headers['content-type'] = mp.header
+          opts.body = mp.data
         }
 
         // make the HTTP request
