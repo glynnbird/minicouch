@@ -2,9 +2,10 @@
 
 A tiny (~1kB minified) CouchDB JavaScript client, inspired by a [post by Caolan](https://caolan.uk/notes/2025-09-18_api_builder_style.cm).
 
-- Implements the whole CouchDB API.
+- Implements the whole CouchDB API using a JavaScript [Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy).
 - Zero dependencies.
-- Basic-auth only. 
+- Basic-auth only.
+- Future proof(!).
 
 ## Installation
 
@@ -118,16 +119,11 @@ await couch.profiles.bob['pic.gif']({ method: 'delete', qs: { rev: '2-456' }})
 
 ## Compared to other clients
 
-[minicouch](https://www.npmjs.com/package/minicouch) has some advantages as a module:
+[minicouch](https://www.npmjs.com/package/minicouch) has some advantages as a module over its rivals, like its small size and lower maintenance footprint and that the function invocations exactly mirror the CouchDB API, so no learning two names for things.
 
-- Zero dependencies.
-- Tiny code size.
-- Future-proof - any API path can be built.
-- The function invocations exactly mirror the CouchDB API, so no learning two names for things.
+But it has some disadvantages:
 
-but has some disadvantages:
-
-- Strictly-typed languages like TypeScript won't like minicouch's lack of structure.
+- Strictly-typed languages like TypeScript won't like minicouch's lack of declared structure.
 - Some function calls become quite verbose, I'm looking at you MapReduce.
 - No high-level abstractions, like changes followers, pagination etc.
 
@@ -148,6 +144,8 @@ couch.mydb._design.myddoc._view.myview  --> $COUCH_URL/mydb/_design/myddoc/_view
 
 This way minicouch doesn't need to model the CouchDB API structure at all, so if a new API call is added later, minicouch already supports it.
 
-When `()` is added, minicouch's [apply](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/Proxy/apply) trap is called and an API form is attempted. The parameters to the function call define the HTTP method, query string parameters, custom headers and an optional request body.
+When `()` is added, minicouch's [apply](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/Proxy/apply) trap is called and an API call is attempted. The parameters to the function call define the HTTP method, query string parameters, custom headers and an optional request body.
 
-minicouch adds a sprinkle of assistance, ensuring that the `body` is formatted correctly and that the response is parsed according to its mime type, but otherwise gets out of the way.
+minicouch adds a sprinkle of assistance, ensuring that the request `body` is formatted correctly, that certain parameters are automatically stringifed and that the response is parsed according to its mime type, but otherwise gets out of the way.
+
+It follow's Nano's convention of resolving the Promise for successful API calls and throwing and Error for anything with a response code 300 and over.

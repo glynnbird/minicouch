@@ -1,26 +1,20 @@
 import pkg from './package.json' with { type: 'json' }
 
-// constants
+// a list of query string parameters that need JSON.stringifying before use
+const PARAMS_TO_ENCODE = ['startkey', 'endkey', 'key', 'keys', 'start_key', 'end_key']
 const MIME_JSON = 'application/json'
 const CONTENT_TYPE = 'content-type'
 
-// a list of query string parameters that need JSON.stringifying
-const PARAMS_TO_ENCODE = ['startkey', 'endkey', 'key', 'keys', 'start_key', 'end_key']
-
 export default function () {
   // parse the URL from the environment to create a new baseURL without credentials
-  const { origin, pathname, username, password } = new URL(process.env.COUCH_URL)
-  const baseURL = `${origin}${pathname}`
+  const { origin, username, password } = new URL(process.env.COUCH_URL)
 
-  // turn the credentials into an base64-encoded string ready for HTTP headers
-  const auth = username && password ? 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64') : ''
-
-  // make default HTTP opts. 'get' is the default method. Asume JSON mime type and our own user-agent + auth
+  // make default HTTP opts. 'get' is the default method. Assume JSON mime type and our own user-agent + auth
   const defaultOpts = {
     headers: {
       'content-type': MIME_JSON,
       'user-agent': `${pkg.name}/${pkg.version}`,
-      authorization: auth || undefined
+      authorization: username && password ? 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64') : undefined
     }
   }
 
@@ -31,34 +25,29 @@ export default function () {
       // trap for accessing properties
       get(_, prop) {
         // some recursion to allow couch.db._design.myddoc._view.myview
+        // to become /db/_design/mydoc/_view/myview
         return minicouch(path + encodeURIComponent(prop) + '/')
       },
       // trap for the function call ()
       async apply(target, _, args) {
-        // create new set of opts based on our defaults and those passed in
-        const opts = {
-          ...defaultOpts,
-          ...(args[0] || {})
-        }
+        // create new set of opts based on our defaults, overridden by those passed in
+        const opts = { ...defaultOpts, ...(args[0] || {}) }
 
-        // form a new URL from path from our proxy, appended to the baseURL
-        const url = new URL(target().replace(/\/$/, ''), baseURL)
+        // form a new URL from path from our proxy, appended to the origin
+        const url = new URL(target().replace(/\/$/, ''), origin)
 
         // if there's a query string object
         if (typeof opts.qs === 'object') {
           // add each k/v to the URL's seachParams
-          for (const [key, value] of Object.entries(opts.qs)) {
+          for (let [key, value] of Object.entries(opts.qs)) {
             // taking care to JSON.stringify certain items
-            if (PARAMS_TO_ENCODE.includes(key)) {
-              opts.qs[key] = JSON.stringify(value)
-            }
-            url.searchParams.set(key, opts.qs[key])
+            value = PARAMS_TO_ENCODE.includes(key) ? JSON.stringify(value) : value
+            url.searchParams.set(key, value)
           }
         }
 
         // if we've been given a JavaScript object, it needs stringifying
-        opts.body = typeof opts.body === 'object' && opts.headers[CONTENT_TYPE].startsWith(MIME_JSON) ?
-          JSON.stringify(opts.body) : opts.body
+        opts.body = typeof opts.body === 'object' && opts.headers[CONTENT_TYPE].startsWith(MIME_JSON) ? JSON.stringify(opts.body) : opts.body
 
         // make the HTTP request
         const response = await fetch(url.toString(), opts)
