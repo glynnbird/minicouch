@@ -187,4 +187,4 @@ When `()` is added, minicouch's [apply](https://developer.mozilla.org/en-US/docs
 
 minicouch adds a sprinkle of assistance, ensuring that the request `body` is formatted correctly, that certain parameters are automatically stringifed and that the response is parsed according to its mime type, but otherwise gets out of the way.
 
-It follow's Nano's convention of resolving the Promise for successful API calls and throwing and Error for anything with a response code 300 and over.
+It follow's Nano's convention of resolving the Promise for successful API calls and throwing an Error for anything with a response code 300 and over.
