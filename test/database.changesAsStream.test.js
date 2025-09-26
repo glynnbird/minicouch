@@ -45,7 +45,6 @@ test('should get a streamed list of changes - GET /_changes - couch.db.changesAs
     buffer += chunk.toString()
   })
   s.on('end', () => {
-    console.log('end', buffer)
     assert.equal(buffer, JSON.stringify(response))
     mockAgent.assertNoPendingInterceptors()
   })

@@ -1,10 +1,12 @@
 import { Readable } from 'node:stream'
+import CookieJar from './cookie.js'
 import pkg from './package.json' with { type: 'json' }
 
 // a list of query string parameters that need JSON.stringifying before use
 const PARAMS_TO_ENCODE = ['startkey', 'endkey', 'key', 'keys', 'start_key', 'end_key']
 const MIME_JSON = 'application/json'
 const CONTENT_TYPE = 'content-type'
+const SET_COOKIE = 'set-cookie'
 
 export default function () {
   // parse the URL from the environment to create a new baseURL without credentials
@@ -18,6 +20,9 @@ export default function () {
       authorization: username && password ? 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64') : undefined
     }
   }
+
+  // cookie jar
+  const cookieJar = new CookieJar()
 
   // returns a Proxy object https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/Proxy
   // which allows access to its properties and methods to be "trapped" with get and apply, respectively
@@ -39,19 +44,28 @@ export default function () {
 
         // if there's a query string object
         if (typeof opts.qs === 'object') {
-          // add each k/v to the URL's seachParams
-          for (let [key, value] of Object.entries(opts.qs)) {
-            // taking care to JSON.stringify certain items
-            value = PARAMS_TO_ENCODE.includes(key) ? JSON.stringify(value) : value
-            url.searchParams.set(key, value)
+          for (const [key, value] of Object.entries(opts.qs)) {
+            // add each k/v to the URL's seachParams, taking care to JSON.stringify certain items
+            url.searchParams.set(key, PARAMS_TO_ENCODE.includes(key) ? JSON.stringify(value) : value)
           }
         }
 
         // if we've been given a JavaScript object, it needs stringifying
         opts.body = typeof opts.body === 'object' && opts.headers[CONTENT_TYPE].startsWith(MIME_JSON) ? JSON.stringify(opts.body) : opts.body
 
+        // add any cookies for this domain
+        const urlStr = url.toString()
+        const cookie = cookieJar.getCookieString(urlStr)
+        if (cookie) {
+          opts.headers.cookie = cookie
+        }
+
         // make the HTTP request
-        const response = await fetch(url.toString(), opts)
+        const response = await fetch(urlStr, opts)
+
+        // parse cookies
+        const cookieHeader = response.headers.get(SET_COOKIE) || ''
+        if (cookieHeader) cookieJar.parse(cookieHeader, urlStr)
 
         // extract the mime type from the response
         const contentType = response.headers.get(CONTENT_TYPE) || ''

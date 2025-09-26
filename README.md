@@ -4,7 +4,6 @@ A tiny (~1kB minified) CouchDB JavaScript client, inspired by a [post by Caolan]
 
 - Implements the whole CouchDB API using a JavaScript [Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy).
 - Zero dependencies.
-- Basic-auth only.
 - Future proof(!).
 
 ## Installation
@@ -20,6 +19,14 @@ The library expects a single environment variable
 - `COUCH_URL` - the URL of the CouchDB service in the form `https://MYUSERNAME:MYPASSWORD@myhostname.com:5984`
 
 ## Usage
+
+Set the `COUCH_URL` environment variable e.g.
+
+```sh
+export COUCH_URL="http://myusername:mypassword@localhost:5984"
+```
+
+The write your code:
 
 ```js
 import minicouch from 'minicouch'
@@ -110,8 +117,24 @@ await couch.profiles.bob['pic.gif']
 await couch.profiles.bob['pic.gif']({ method: 'delete', qs: { rev: '2-456' }})
 
 // the output can also be streamed by adding stream:true
-(await couch.mydb._design.report._view.monthly({ qs: { group_level: 2}, stream: true })).pipe(process.stdout)
+const s = await couch.mydb._design.report._view.monthly({ qs: { group_level: 2}, stream: true })
+s.pipe(process.stdout)
 ```
+
+To use session authentication, don't put credentials in `COUCH_URL`:
+
+e.g.
+
+```sh
+export COUCH_URL="http://localhost:5984"
+```
+
+Call the `POST /session` endpoint before other API calls, supplying the username & password once:
+
+```js
+await couch._session({ method: 'post', body: { name: 'myusername', password: 'mypassword'} })
+await couch._all_dbs()
+``` 
 
 ## Function call parameters
 
@@ -133,8 +156,8 @@ But it has some disadvantages:
 
 Other libraries include:
 
-- [nano](https://www.npmjs.com/package/nano) - Official Apache CouchDB Node.js library. Adds Typescript definitions, cookies, streamed output options, changes follower, multi-part functions and custom agent support.
-- [@ibm-cloud/cloudant](https://github.com/IBM/cloudant-node-sdk) Official IBM Cloudant SDK. Basic/Session/IAM auth, changes follower, pagination API, TypeScript support, retry logic, streamed output options and custom agent support.
+- [nano](https://www.npmjs.com/package/nano) - Official Apache CouchDB Node.js library. Adds Typescript definitions, changes follower, multi-part functions and custom agent support.
+- [@ibm-cloud/cloudant](https://github.com/IBM/cloudant-node-sdk) Official IBM Cloudant SDK. Adds IAM auth, changes follower, pagination API, TypeScript support, retry logic and custom agent support.
 
 ## How does it work?
 
