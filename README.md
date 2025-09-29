@@ -113,7 +113,7 @@ await couch.profiles.bob['pic.gif']({
   headers: { 'content-type': 'image/gif' },
   body: Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64')
 })
-await couch.profiles.bob['pic.gif']
+await couch.profiles.bob['pic.gif']()
 await couch.profiles.bob['pic.gif']({ method: 'delete', qs: { rev: '2-456' }})
 
 // the output can also be streamed by adding stream:true
