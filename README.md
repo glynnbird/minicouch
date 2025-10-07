@@ -1,6 +1,6 @@
 # minicouch
 
-A tiny (~1kB minified) CouchDB JavaScript client, inspired by a [post by Caolan](https://caolan.uk/notes/2025-09-18_api_builder_style.cm).
+A tiny (~3kB minified) CouchDB JavaScript client, inspired by a [post by Caolan](https://caolan.uk/notes/2025-09-18_api_builder_style.cm).
 
 - Implements the whole CouchDB API using a JavaScript [Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy).
 - Zero dependencies.
