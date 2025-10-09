@@ -149,10 +149,10 @@ await couch.db.docid({ method: 'put', multipart: images })
 
 ## Function call attributes
 
-- `method` - (optional) HTTP method (defaults to 'get').
-- `qs` - (optional)  An object representing the key/values to be encoded into the request query string.
+- `method` - (optional) HTTP method (defaults to `get`).
+- `qs` - (optional)  An object representing the key/values to be encoded into the request query string. Attributes that need to be JSON.stringified are automatically stringified e.g. `start_key`.
 - `body` - (optional) An object representing the data to be JSON.stringified into a POST/PUT request body. If a string or a Buffer is supplied, it will go unmolested to the request body.
-- `headers` - An object whose key values override the default `content-type: application/json` HTTP request headers.
+- `headers` -  (optional) An object whose key/values become HTTP request headers. The default is `{ 'content-type': 'application/json', 'user-agent': 'minicouch/1.2.0'}`.
 - `stream` - (optional) A boolean indicating whether the result should be a stream (default `false`).
 - `multipart` - (optional) An array of attachments to be combined into a multi-part upload.
 
